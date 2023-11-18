@@ -71,12 +71,6 @@
 			min: 4
 		}
 	});
-	import {
-		GiftBoxSolid,
-		ArrowUpRightFromSquareOutline,
-		UserSolid,
-		HeadphonesSolid
-	} from 'flowbite-svelte-icons';
 
 	let messages: Message[] = [
 		{
