@@ -124,13 +124,23 @@
 		let partialMessageChannel = new PartialMessageListener();
 		const content = new Promise<MessageContent>(async (resolve, reject) => {
 			let innerLatest: RunState | null = null;
-			await fetchEventSource('https://api.tum.services/rag-conversation/stream_log', {
+			// always take two messages and pass them as a tuple
+			const chatHistory = [];
+			for (let i = 0; messages.length - i >= 2; i += 2) {
+				const message = await messages[i].content;
+				const nextMessage = await messages[i + 1].content;
+				chatHistory.push([message.content, nextMessage?.content]);
+			}
+
+			console.log(chatHistory);
+
+			await fetchEventSource('http://localhost:8080/rag-conversation/stream_log', {
 				//signal: controller.signal,
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
 					input: {
-						chat_history: [],
+						chat_history: chatHistory,
 						question: message
 					}
 				}),
