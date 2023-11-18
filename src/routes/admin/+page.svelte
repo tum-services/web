@@ -11,21 +11,22 @@
         FileEditSolid, EnvelopeSolid, ArrowRightOutline, CheckCircleSolid, CloseCircleSolid
     } from 'flowbite-svelte-icons';
     import MessageBox from "$lib/MessageBox.svelte";
+    import {onMount} from "svelte";
 
     $: activeUrl = $page.url.pathname;
 
 
-    const chats = [
+    let chats = [
         {
             "name": "Tom",
             "concern": "Beurlaubung",
             "summary": "Thomas Florian möchte sich beurlauben lassen, da er eine Reise nach Italien plant.",
             "wizard": [
-                {author: "user", content: Promise.resolve({content: "ich möchte mich beeurlauben lassen"})},
-                {author: "bot", content: Promise.resolve({content: "Toll du faule Sau. Welches Semester?"})},
-                {author: "user", content: Promise.resolve({content: "4. Semester"})},
-                {author: "bot", content: Promise.resolve({content: "Für ein Praktikum oder Auslandssemester?"})},
-                {author: "user", content: Promise.resolve({content: "Urlaub"})},
+                {author: "user", content: "ich möchte mich beeurlauben lassen", complete: true},
+                {author: "bot", content: "Toll du faule Sau. Welches Semester?", complete: true},
+                {author: "user", content: "4. Semester", complete: true},
+                {author: "bot", content: "Für ein Praktikum oder Auslandssemester?", complete: true},
+                {author: "user", content: "Urlaub", complete: true},
 
             ]
         },
@@ -34,7 +35,24 @@
         {"name": "Dooooorian", "summary": "Bla Bla Bla", "wizard": ["Doooorian", "Hallo ER"]},
     ]
 
-    let current = chats[0];
+
+    let current = {}
+
+    const HOST = "https://api.tum.services"
+
+    function crawlMessages() {
+
+
+        fetch(`${HOST}/conversation/`)
+                .then((response) => response.json())
+                .then((data) => {
+                    chats = data
+                    current = data[0]
+                })
+                .catch((error) => console.error(error));
+    }
+
+    onMount(crawlMessages)
 
 
 </script>
@@ -49,7 +67,7 @@
             <SidebarWrapper>
                 <SidebarGroup>
                     {#each chats as chat}
-                        <SidebarItem label={chat.name} on:click={() => {current = chat}}>
+                        <SidebarItem label={chat.title} on:click={() => {current = chat}}>
                             <svelte:fragment slot="icon">
                                 <ChartPieSolid
                                         class="w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"/>
@@ -64,7 +82,7 @@
                 <div class="flex gap-4 justify-between">
                     <Card>
                         <Heading
-                                class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{current.concern}
+                                class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{current.title}
                         </Heading>
                         <P class="font-normal text-gray-700 dark:text-gray-400 leading-tight">{current.summary}</P>
                     </Card>
@@ -93,9 +111,6 @@
 
                 </div>
                 <hr class="h-px my-4 bg-gray-200 border-0 dark:bg-gray-700">
-                {#each current.wizard as message }
-                    <MessageBox message={message}/>
-                {/each}
             </div>
 
 
