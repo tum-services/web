@@ -33,6 +33,15 @@
 			this.listeners.forEach((listener) => listener(message));
 		}
 	}
+
+	export interface NavigatumSearchResult {
+		sections: {
+			facet: 'rooms' | 'sites_buildings';
+			entries: {
+				id: string;
+			}[];
+		}[];
+	}
 </script>
 
 <script lang="ts">
@@ -43,14 +52,50 @@
 	export let message: Message;
 
 	let partialMessage = '';
+	let roomId: string | undefined = undefined;
+	let roomNumber: string | undefined = undefined;
 
 	$: {
 		if (message.partialMessageChannel) {
 			message.partialMessageChannel.onMessage((message) => {
 				partialMessage = message;
+				extractRoomNumber(partialMessage);
 			});
 		}
 	}
+
+	const extractRoomNumber = async (message: string) => {
+		if (roomId || roomNumber) return;
+
+		let roomNumberMatch = message.match(/\d+\.\d+\.\d+/);
+		console.log(roomNumberMatch);
+		if (!roomNumberMatch) {
+			return;
+		}
+
+		roomNumber = roomNumberMatch[0];
+		let r = await fetch(`https://nav.tum.de/api/search?q=${roomNumber}`);
+		let data = (await r.json()) as NavigatumSearchResult;
+		if (data.sections.length === 0) {
+			return;
+		}
+
+		let rooms = undefined;
+		for (let section of data.sections) {
+			if (section.facet === 'rooms') {
+				rooms = section.entries;
+				break;
+			}
+		}
+
+		console.log(rooms);
+		if (!rooms || rooms.length === 0) {
+			return;
+		}
+
+		let room = rooms[0];
+		roomId = room.id;
+	};
 </script>
 
 <Card class="w-full max-w-[100%]">
@@ -85,6 +130,24 @@
 							<div>{source.title}</div>
 						</a>
 					{/each}
+				{/if}
+
+				{#if roomId}
+					<div class="text-gray-500 dark:text-gray-400 font-bold mb-[-0.5rem]">
+						Dieser Raum könnte auch noch hilfreich sein:
+					</div>
+					<a
+						href={`https://nav.tum.de/room/${roomId}`}
+						class="flex flex-row gap-3 items-ceter justify-start text-gray-500 dark:text-gray-400"
+						target="_blank"
+						rel="noopener noreferrer"
+					>
+						<img
+							src={`https://nav.tum.de/api/preview/${roomId}?lang=de`}
+							class="max-h-[200px]"
+							alt="Room preview"
+						/>
+					</a>
 				{/if}
 			</div>
 		{:catch error}

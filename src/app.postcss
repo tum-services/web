@@ -7,16 +7,19 @@
     list-style: latin;
 }
 
-.message-box-contents > ul {
+.message-box-contents ul {
     list-style: circle;
 }
 
-.message-box-contents > ol, ul {
+.message-box-contents ol, ul {
     padding-left: 1.5em;
     padding-top: 0.5em;
     padding-bottom: 0.5em;
 }
 
+.message-box-contents a {
+    @apply text-blue-600 underline;
+}
 
 .message-box-contents.typing > p:last-child::after {
     content: '';

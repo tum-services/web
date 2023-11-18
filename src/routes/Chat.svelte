@@ -118,7 +118,7 @@
 		let partialMessageChannel = new PartialMessageListener();
 		const content = new Promise<MessageContent>(async (resolve, reject) => {
 			let innerLatest: RunState | null = null;
-			await fetchEventSource('http://localhost:8080/rag-conversation/stream_log', {
+			await fetchEventSource('https://api.tum.services/rag-conversation/stream_log', {
 				//signal: controller.signal,
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },

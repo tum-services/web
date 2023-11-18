@@ -2,35 +2,43 @@
 	import { Alert, Card, Heading, P } from 'flowbite-svelte';
 
 	export let textAreaMessage = '';
+
+	let exampleQuestions = [
+		{
+			question: 'Wie viele ECTS braucht man insgesamt für den Informatikbachelor?',
+			highlightWords: 5
+		},
+		{
+			question: 'Wie bewerbe ich mich für einen Informatikbachelor an der TUM Schritt für Schritt?',
+			highlightWords: 4
+		},
+		{
+			question: 'Welche Nebenfächer gibt es für den Informatikbachelor?',
+			highlightWords: 4
+		},
+		{
+			question: 'a b c',
+			highlightWords: 2
+		}
+	];
 </script>
 
 <div class="grid grid-cols-2 gap-3 overflow-hidden">
-	<Card
-		class="cursor-pointer max-w-none"
-		on:click={() => {
-			textAreaMessage = 'Wie viel ETCS umfasst das Anwendungsfach?';
-		}}
-	>
-		<Heading tag="h5" class="mb-2 text-xl font-bold tracking-tight text-gray-900 dark:text-white"
-			>Anwendungsfach
-		</Heading>
-		<P class="font-normal text-gray-700 dark:text-gray-400 leading-tight"
-			>Wie viel ETCS umfasst das Anwendungsfach?</P
+	{#each exampleQuestions as question}
+		<Card
+			class="cursor-pointer max-w-none"
+			on:click={() => {
+				textAreaMessage = question.question;
+			}}
 		>
-	</Card>
-	<Card
-		class="cursor-pointer max-w-none"
-		on:click={() => {
-			textAreaMessage = 'Wie kann ich mich beurlauben lassen?';
-		}}
-	>
-		<Heading tag="h5" class="mb-2 text-xl font-bold tracking-tight text-gray-900 dark:text-white"
-			>Beurlaubung
-		</Heading>
-		<P class="font-normal text-gray-700 dark:text-gray-400 leading-tight"
-			>Wie kann ich mich beurlauben lassen?</P
-		>
-	</Card>
+			<Heading tag="h5" class="mb-2 text-xl font-bold tracking-tight text-gray-900 dark:text-white">
+				{question.question.split(' ').slice(0, question.highlightWords).join(' ')}
+			</Heading>
+			<P class="font-normal text-gray-700 dark:text-gray-400 leading-tight">
+				{question.question.split(' ').slice(question.highlightWords).join(' ')}
+			</P>
+		</Card>
+	{/each}
 </div>
 <Alert color="blue" class="flex-1">
 	<p class="text-center">
