@@ -79,7 +79,9 @@
 	let textAreaMessage = '';
 	let busy = false;
 
-	let activeWizzard: { id: number; answers: string[] } | undefined = undefined;
+	let activeWizzard:
+		| { id: number; answers: string[]; questions: WizzardQuestion[]; currentQuestion: number }
+		| undefined = undefined;
 
 	const onKeyPress = (event: KeyboardEvent) => {
 		if (event.key === 'Enter' && !event.shiftKey) {
@@ -243,6 +245,41 @@
 
 		let wizzardQuestionsResponse = await fetch(`${BASE_URL}/wizard/${wizzard}`);
 		let wizzardQuestions = (await wizzardQuestionsResponse.json()) as WizzardQuestion[];
+
+		activeWizzard = {
+			id: wizzard,
+			answers: [],
+			questions: wizzardQuestions,
+			currentQuestion: 0
+		};
+	};
+
+	const nextWizzardQuestion = () => {
+		if (!activeWizzard) return;
+
+		let question = activeWizzard.questions[activeWizzard.currentQuestion];
+		let questionString = question.question;
+
+		if (question.type === 'checkbox' && question.options) {
+			questionString += '\n\nPlease select one option by typing the corresponding number:\n';
+			for (let i = 0; i < question.options.length; i++) {
+				questionString += `${i + 1}. ${question.options[i]}\n`;
+			}
+		}
+
+		updateLastMessage({
+			...messages[messages.length - 1],
+			content: questionString,
+			complete: true
+		});
+	};
+
+	const handleWizzardResponse = (response: string) => {
+		pushMessage({
+			author: 'bot',
+			content: '',
+			complete: false
+		});
 	};
 </script>
 
