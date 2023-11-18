@@ -17,8 +17,8 @@
 			highlightWords: 4
 		},
 		{
-			question: 'a b c',
-			highlightWords: 2
+			question: 'Wo ist das Büro der Studienberatung Informatik?',
+			highlightWords: 6
 		}
 	];
 </script>
