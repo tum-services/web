@@ -50,10 +50,21 @@
 		description: string;
 		source: string;
 		title: string;
+		wizzard?: number;
+	}
+
+	export interface WizzardQuestion {
+		id: number;
+		question: string;
+		type: 'text' | 'checkbox';
+		validation: string;
+		options?: string[];
 	}
 </script>
 
 <script lang="ts">
+	const BASE_URL = 'https://api.tum.services';
+
 	import { Textarea, ToolbarButton } from 'flowbite-svelte';
 	import type { BotMetadata, Message } from '$lib/MessageBox.svelte';
 	import MessageBox from '$lib/MessageBox.svelte';
@@ -62,10 +73,15 @@
 	import { PapperPlaneOutline } from 'flowbite-svelte-icons';
 	import StartChat from '$lib/StartChat.svelte';
 	import { findRoomId } from '$lib/navigatum';
+	import { checkForApplicableWizzard, wizzardName } from '$lib/wizzard';
 
 	let messages: Message[] = [];
 	let textAreaMessage = '';
 	let busy = false;
+
+	let activeWizzard:
+		| { id: number; answers: string[]; questions: WizzardQuestion[]; currentQuestion: number }
+		| undefined = undefined;
 
 	const onKeyPress = (event: KeyboardEvent) => {
 		if (event.key === 'Enter' && !event.shiftKey) {
@@ -87,6 +103,9 @@
 	};
 
 	const pushMessage = (message: Message) => {
+		if (messages.length > 0 && messages[messages.length - 1].botMetadata?.wizzard !== undefined)
+			messages[messages.length - 1].botMetadata!.wizzard = undefined;
+
 		messages = [...messages, message];
 	};
 
@@ -99,10 +118,14 @@
 		return applyPatch(state, action, true, false).newDocument;
 	}
 
-	const extractMetadata = async (state: RunState | null): Promise<BotMetadata> => {
+	const extractMetadata = async (
+		state: RunState | null,
+		userMessage: string
+	): Promise<BotMetadata> => {
 		const metadata: BotMetadata = {
 			sources: [],
-			roomId: undefined
+			roomId: undefined,
+			wizzard: undefined
 		};
 
 		if (state?.logs['Retriever']?.final_output) {
@@ -117,11 +140,18 @@
 				if (!existing) {
 					metadata.sources.push(document.metadata);
 				}
+
+				/*if (document.metadata.wizzard) {
+					alert(document.metadata.wizzard);
+					metadata.wizzard = document.metadata.wizzard;
+				}*/
 			}
 		}
 
 		if (state?.final_output?.output)
 			metadata.roomId = await findRoomId(state?.final_output?.output);
+
+		metadata.wizzard = checkForApplicableWizzard(userMessage);
 
 		return metadata;
 	};
@@ -152,7 +182,7 @@
 			chatHistory.shift();
 		}
 
-		await fetchEventSource('https://api.tum.services/rag-conversation/stream_log', {
+		await fetchEventSource(`${BASE_URL}/rag-conversation/stream_log`, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
@@ -175,7 +205,7 @@
 			async onclose() {
 				console.log(innerLatest?.final_output);
 
-				let botMetadata = await extractMetadata(innerLatest);
+				let botMetadata = await extractMetadata(innerLatest, message);
 				let content = innerLatest?.final_output?.output || '';
 
 				updateLastMessage({
@@ -197,6 +227,60 @@
 
 		busy = false;
 	};
+
+	const onWizzardStart = async (wizzard: number) => {
+		console.log("Wizzard '" + wizzard + ' (' + wizzardName[wizzard] + ")' started!");
+
+		pushMessage({
+			author: 'system',
+			content: `Wizzard '${wizzardName[wizzard]}' started!`,
+			complete: true
+		});
+
+		pushMessage({
+			author: 'bot',
+			content: '',
+			complete: false
+		});
+
+		let wizzardQuestionsResponse = await fetch(`${BASE_URL}/wizard/${wizzard}`);
+		let wizzardQuestions = (await wizzardQuestionsResponse.json()) as WizzardQuestion[];
+
+		activeWizzard = {
+			id: wizzard,
+			answers: [],
+			questions: wizzardQuestions,
+			currentQuestion: 0
+		};
+	};
+
+	const nextWizzardQuestion = () => {
+		if (!activeWizzard) return;
+
+		let question = activeWizzard.questions[activeWizzard.currentQuestion];
+		let questionString = question.question;
+
+		if (question.type === 'checkbox' && question.options) {
+			questionString += '\n\nPlease select one option by typing the corresponding number:\n';
+			for (let i = 0; i < question.options.length; i++) {
+				questionString += `${i + 1}. ${question.options[i]}\n`;
+			}
+		}
+
+		updateLastMessage({
+			...messages[messages.length - 1],
+			content: questionString,
+			complete: true
+		});
+	};
+
+	const handleWizzardResponse = (response: string) => {
+		pushMessage({
+			author: 'bot',
+			content: '',
+			complete: false
+		});
+	};
 </script>
 
 <div class="flex flex-col justify-end gap-3 flex-1 max-h-full p-1">
@@ -206,7 +290,7 @@
 		{/if}
 
 		{#each messages.slice().reverse() as message}
-			<MessageBox {message} />
+			<MessageBox {message} {onWizzardStart} />
 		{/each}
 	</div>
 	<form>

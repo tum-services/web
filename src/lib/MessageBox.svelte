@@ -7,10 +7,11 @@
 	export interface BotMetadata {
 		sources: SourceDocument[];
 		roomId?: string;
+		wizzard?: number;
 	}
 
 	export interface Message {
-		author: 'bot' | 'user';
+		author: 'bot' | 'user' | 'system';
 		content: string;
 		complete: boolean;
 		botMetadata?: BotMetadata;
@@ -18,11 +19,13 @@
 </script>
 
 <script lang="ts">
-	import { Card, P } from 'flowbite-svelte';
+	import { Button, Card, P } from 'flowbite-svelte';
 	import { ArrowUpRightFromSquareOutline, HeadphonesSolid, UserSolid } from 'flowbite-svelte-icons';
 	import MessageBoxContent from './MessageBoxContent.svelte';
+	import { wizzardName } from './wizzard';
 
 	export let message: Message;
+	export let onWizzardStart: (wizzard: number) => void;
 </script>
 
 <Card class="w-full max-w-[100%]">
@@ -75,6 +78,19 @@
 							alt="Room preview"
 						/>
 					</a>
+				{/if}
+
+				{#if message.botMetadata?.wizzard !== undefined}
+					<div class="w-ful border-t border-gray-200 dark:border-gray-700"></div>
+
+					<div class="flex flex-row gap-2 items-center">
+						Möchtest die Beantragung einer {wizzardName[message.botMetadata?.wizzard ?? -1]} starten?
+						<Button
+							on:click={() => {
+								onWizzardStart(message.botMetadata?.wizzard ?? -1);
+							}}>Start!</Button
+						>
+					</div>
 				{/if}
 			</div>
 		{/if}
