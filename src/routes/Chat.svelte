@@ -73,27 +73,7 @@
 		}
 	});
 
-	let messages: Message[] = [
-		{
-			author: 'user',
-			content: Promise.resolve({ content: lorem.generateSentences(1) })
-		},
-		{
-			author: 'bot',
-			content: Promise.resolve({
-				content: lorem.generateSentences(3),
-				botMetadata: { sources: [{ title: 'Link', source: 'https://cit.tum.de' }] }
-			})
-		},
-		{
-			author: 'user',
-			content: Promise.resolve({ content: lorem.generateSentences(5) })
-		},
-		{
-			author: 'bot',
-			content: Promise.resolve({ content: lorem.generateSentences(12) })
-		}
-	];
+	let messages: Message[] = [];
 
 	const onKeyPress = (event: KeyboardEvent) => {
 		const target = event.target as HTMLTextAreaElement;
@@ -190,22 +170,6 @@
 			content
 		});
 	};
-
-	const getReply = async (): Promise<string> => {
-		let message = lorem.generateSentences(10);
-
-		// push partial message to the last message
-		for (let i = 0; i < message.length; i++) {
-			await delay(5000 / message.length);
-			if (messages.length > 0 && messages[messages.length - 1].partialMessageChannel != undefined) {
-				messages[messages.length - 1].partialMessageChannel?.send(message.slice(0, i));
-			}
-		}
-
-		return message;
-	};
-
-	const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
 </script>
 
 <div class="flex flex-col justify-end gap-3 flex-1 max-h-full p-1">
