@@ -74,7 +74,15 @@
 		}
 	});
 
-	let messages: Message[] = [];
+	let messages: Message[] = [
+		{
+			author: 'bot',
+			content: Promise.resolve({
+				content:
+					"Hi, I'm TUM Bot! How can I help you?\nHere are some options:\n1. One\n2. Two\n3. Three\n\nAnd some more options:\n- one\n- Two\n- Three"
+			})
+		}
+	];
 
 	const onKeyPress = (event: KeyboardEvent) => {
 		const target = event.target as HTMLTextAreaElement;
@@ -117,7 +125,7 @@
 		let partialMessageChannel = new PartialMessageListener();
 		const content = new Promise<MessageContent>(async (resolve, reject) => {
 			let innerLatest: RunState | null = null;
-			await fetchEventSource('http://localhost:8080/rag-conversation/stream_log', {
+			await fetchEventSource('https://api.tum.services/rag-conversation/stream_log', {
 				//signal: controller.signal,
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
@@ -149,7 +157,13 @@
 							?.final_output?.documents;
 
 						for (const document of documents || []) {
-							metadata.sources.push(document.metadata);
+							// check if link already exists
+							const existing = metadata.sources.find(
+								(source) => source.source === document.metadata.source
+							);
+							if (!existing) {
+								metadata.sources.push(document.metadata);
+							}
 						}
 					}
 

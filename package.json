@@ -33,6 +33,7 @@
 	"dependencies": {
 		"@microsoft/fetch-event-source": "^2.0.1",
 		"fast-json-patch": "^3.1.1",
-		"lorem-ipsum": "^2.0.8"
+		"lorem-ipsum": "^2.0.8",
+		"svelte-markdown": "^0.4.0"
 	}
 }

@@ -39,6 +39,8 @@
 	import { ArrowUpRightFromSquareOutline, HeadphonesSolid, UserSolid } from 'flowbite-svelte-icons';
 	import { onMount } from 'svelte';
 	import Header from './Header.svelte';
+	import SvelteMarkdown from 'svelte-markdown';
+	import MessageBoxContent from './MessageBoxContent.svelte';
 
 	export let message: Message;
 
@@ -63,12 +65,14 @@
 	</div>
 	<P>
 		{#await message.content}
-			{partialMessage} <Spinner />
+			<div class="flex flex-row gap-2 items-end">
+				<MessageBoxContent typing={true} text={partialMessage} />
+			</div>
 		{:then content}
 			<div class="flex flex-col w-full gap-3">
-				{content.content}
+				<MessageBoxContent text={content.content} />
 
-				{#if content.botMetadata}
+				{#if content.botMetadata && content.botMetadata.sources.length > 0}
 					<div class="text-gray-500 dark:text-gray-400 font-bold mb-[-0.5rem]">
 						Diese Links könnten auch noch hilfreich sein:
 					</div>

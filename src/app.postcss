@@ -2,3 +2,51 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.message-box-contents > ol {
+    list-style: latin;
+}
+
+.message-box-contents > ul {
+    list-style: circle;
+}
+
+.message-box-contents > ol, ul {
+    padding-left: 1.5em;
+    padding-top: 0.5em;
+    padding-bottom: 0.5em;
+}
+
+
+.message-box-contents.typing > p:last-child::after {
+    content: '';
+    display: inline-block;
+    height: 1em;
+    width: 0.3em;
+    margin-left: 0.3em;
+    background-color: white;
+    animation: blink-animation 0.5s steps(5, start) infinite;
+    -webkit-animation: blink-animation 0.5s steps(5, start) infinite;
+}
+
+.message-box-contents.typing > ul:last-child >  *:last-child::after {
+    content: '';
+    display: inline-block;
+    height: 1em;
+    width: 0.3em;
+    margin-left: 0.3em;
+    background-color: white;
+    animation: blink-animation 0.5s steps(5, start) infinite;
+    -webkit-animation: blink-animation 0.5s steps(5, start) infinite;
+}
+
+@keyframes blink-animation {
+    to {
+      visibility: hidden;
+    }
+  }
+  @-webkit-keyframes blink-animation {
+    to {
+      visibility: hidden;
+    }
+  }
