@@ -54,12 +54,13 @@
 </script>
 
 <script lang="ts">
-	import { Card, Label, Textarea } from 'flowbite-svelte';
+	import { Alert, Button, Card, Label, Textarea, ToolbarButton } from 'flowbite-svelte';
 	import { LoremIpsum } from 'lorem-ipsum';
 	import type { BotMetadata, Message, MessageContent } from '$lib/MessageBox.svelte';
 	import MessageBox, { PartialMessageListener } from '$lib/MessageBox.svelte';
 	import { fetchEventSource } from '@microsoft/fetch-event-source';
 	import { applyPatch, type Operation } from 'fast-json-patch';
+	import { PapperPlaneOutline } from 'flowbite-svelte-icons';
 
 	const lorem = new LoremIpsum({
 		sentencesPerParagraph: {
@@ -98,11 +99,23 @@
 		const target = event.target as HTMLTextAreaElement;
 
 		if (event.key === 'Enter' && !event.shiftKey) {
-			if (target.value.trim() !== '') {
-				sendMessage(target.value);
-			}
+			checkSendMessage(textAreaMessage);
 			target.value = '';
 			event.preventDefault();
+		}
+	};
+
+	let textAreaMessage = '';
+
+	const submitUserMessage = () => {
+		checkSendMessage(textAreaMessage);
+		textAreaMessage = '';
+	};
+
+	const checkSendMessage = (message: string) => {
+		message = message.trim();
+		if (message !== '') {
+			sendMessage(message);
 		}
 	};
 
@@ -202,6 +215,26 @@
 		{/each}
 	</div>
 
-	<Label for="textarea-id" class="mb-2">Your message</Label>
-	<Textarea id="textarea-id" on:keypress={onKeyPress} placeholder="Type your message here..." />
+	<form>
+		<Alert color="dark" class="px-3 py-2">
+			<svelte:fragment slot="icon">
+				<Textarea
+					bind:value={textAreaMessage}
+					id="chat"
+					rows="2"
+					on:keypress={onKeyPress}
+					placeholder="Your message..."
+				/>
+				<ToolbarButton
+					type="submit"
+					color="blue"
+					on:click={submitUserMessage}
+					class="rounded-full text-primary-600 dark:text-primary-500"
+				>
+					<PapperPlaneOutline class="w-5 h-5 rotate-45" />
+					<span class="sr-only">Type your question about TUM here</span>
+				</ToolbarButton>
+			</svelte:fragment>
+		</Alert>
+	</form>
 </div>
