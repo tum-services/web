@@ -54,40 +54,25 @@
 </script>
 
 <script lang="ts">
-	import { Alert, Button, Card, Label, Textarea, ToolbarButton } from 'flowbite-svelte';
-	import { LoremIpsum } from 'lorem-ipsum';
-	import type { BotMetadata, Message, MessageContent } from '$lib/MessageBox.svelte';
-	import MessageBox, { PartialMessageListener } from '$lib/MessageBox.svelte';
+	import { Textarea, ToolbarButton } from 'flowbite-svelte';
+	import type { BotMetadata, Message } from '$lib/MessageBox.svelte';
+	import MessageBox from '$lib/MessageBox.svelte';
 	import { fetchEventSource } from '@microsoft/fetch-event-source';
 	import { applyPatch, type Operation } from 'fast-json-patch';
 	import { PapperPlaneOutline } from 'flowbite-svelte-icons';
 	import StartChat from '$lib/StartChat.svelte';
-
-	const lorem = new LoremIpsum({
-		sentencesPerParagraph: {
-			max: 8,
-			min: 4
-		},
-		wordsPerSentence: {
-			max: 16,
-			min: 4
-		}
-	});
+	import { findRoomId } from '$lib/navigatum';
 
 	let messages: Message[] = [];
-	let chatHistory: string[][] = [];
+	let textAreaMessage = '';
+	let busy = false;
 
 	const onKeyPress = (event: KeyboardEvent) => {
-		const target = event.target as HTMLTextAreaElement;
-
 		if (event.key === 'Enter' && !event.shiftKey) {
-			checkSendMessage(textAreaMessage);
-			target.value = '';
 			event.preventDefault();
+			submitUserMessage();
 		}
 	};
-
-	let textAreaMessage = '';
 
 	const submitUserMessage = () => {
 		checkSendMessage(textAreaMessage);
@@ -105,88 +90,109 @@
 		messages = [...messages, message];
 	};
 
+	const updateLastMessage = (message: Message) => {
+		messages[messages.length - 1] = message;
+		messages = [...messages];
+	};
+
 	function reducer(state: RunState | null, action: Operation[]) {
 		return applyPatch(state, action, true, false).newDocument;
 	}
 
+	const extractMetadata = async (state: RunState | null): Promise<BotMetadata> => {
+		const metadata: BotMetadata = {
+			sources: [],
+			roomId: undefined
+		};
+
+		if (state?.logs['Retriever']?.final_output) {
+			const documents = (state?.logs['Retriever'] as RetrieverLogEntry | undefined)?.final_output
+				?.documents;
+
+			for (const document of documents || []) {
+				// check if link already exists
+				const existing = metadata.sources.find(
+					(source) => source.source === document.metadata.source
+				);
+				if (!existing) {
+					metadata.sources.push(document.metadata);
+				}
+			}
+		}
+
+		if (state?.final_output?.output)
+			metadata.roomId = await findRoomId(state?.final_output?.output);
+
+		return metadata;
+	};
+
 	const sendMessage = async (message: string) => {
+		busy = true;
+
 		pushMessage({
 			author: 'user',
-			content: Promise.resolve({ content: message })
-		});
-
-		let partialMessageChannel = new PartialMessageListener();
-		const content = new Promise<MessageContent>(async (resolve, reject) => {
-			let innerLatest: RunState | null = null;
-			await fetchEventSource('https://api.tum.services/rag-conversation/stream_log', {
-				//signal: controller.signal,
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					input: {
-						chat_history: chatHistory,
-						question: message
-					}
-				}),
-				onmessage(msg) {
-					if (msg.event === 'data') {
-						innerLatest = reducer(innerLatest, JSON.parse(msg.data)?.ops);
-						console.log(innerLatest);
-
-						partialMessageChannel.send(
-							(innerLatest?.streamed_output as string[]).reduce((a, b) => a + b, '')
-						);
-					}
-				},
-				onclose() {
-					console.log(innerLatest?.final_output);
-
-					const metadata: BotMetadata = {
-						sources: []
-					};
-
-					if (innerLatest?.logs['Retriever']?.final_output) {
-						const documents = (innerLatest?.logs['Retriever'] as RetrieverLogEntry | undefined)
-							?.final_output?.documents;
-
-						for (const document of documents || []) {
-							// check if link already exists
-							const existing = metadata.sources.find(
-								(source) => source.source === document.metadata.source
-							);
-							if (!existing) {
-								metadata.sources.push(document.metadata);
-							}
-						}
-					}
-
-					let reply = (innerLatest?.final_output?.output as string) || '';
-
-					if (chatHistory.length >= 5) chatHistory.shift();
-
-					chatHistory.push([message, reply]);
-
-					resolve({
-						content: reply,
-						botMetadata: metadata
-					});
-				},
-				onerror(error) {
-					reject('Error: ' + error);
-					throw error;
-				}
-			});
+			content: message,
+			complete: true
 		});
 
 		pushMessage({
 			author: 'bot',
-			partialMessageChannel,
-			content
+			content: '',
+			complete: false
 		});
-	};
 
-	let busy = false;
-	$: busy = messages.length > 0 && messages[messages.length - 1].author === 'user';
+		let innerLatest: RunState | null = null;
+
+		const chatHistory: [string, string][] = [];
+		for (let i = 0; i + 1 < messages.length; i += 2) {
+			chatHistory.push([messages[i].content, messages[i + 1].content]);
+		}
+
+		await fetchEventSource('https://api.tum.services/rag-conversation/stream_log', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				input: {
+					chat_history: chatHistory,
+					question: message
+				}
+			}),
+			onmessage(msg) {
+				if (msg.event === 'data') {
+					innerLatest = reducer(innerLatest, JSON.parse(msg.data)?.ops);
+					console.log(innerLatest);
+
+					updateLastMessage({
+						...messages[messages.length - 1],
+						content: innerLatest?.streamed_output.join('') || ''
+					});
+				}
+			},
+			async onclose() {
+				console.log(innerLatest?.final_output);
+
+				let botMetadata = await extractMetadata(innerLatest);
+				let content = innerLatest?.final_output?.output || '';
+
+				updateLastMessage({
+					author: 'bot',
+					content,
+					complete: true,
+					botMetadata
+				});
+			},
+			onerror(error) {
+				updateLastMessage({
+					...messages[messages.length - 1],
+					content: 'Error: ' + error,
+					complete: true
+				});
+				throw error;
+			}
+		});
+
+		busy = false;
+	};
 </script>
 
 <div class="flex flex-col justify-end gap-3 flex-1 max-h-full p-1">
