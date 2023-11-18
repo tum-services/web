@@ -148,6 +148,10 @@
 			chatHistory.push([messages[i].content, messages[i + 1].content]);
 		}
 
+		while (chatHistory.length > 5) {
+			chatHistory.shift();
+		}
+
 		await fetchEventSource('https://api.tum.services/rag-conversation/stream_log', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
