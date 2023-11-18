@@ -4,9 +4,6 @@
 	import Chat from './Chat.svelte';
 </script>
 
-<div class="p-8">
-	<div class="grid grid-cols-2 gap-4">
-		<Faq />
-		<Chat />
-	</div>
+<div class="container m-auto h-full">
+	<Chat />
 </div>
