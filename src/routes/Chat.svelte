@@ -227,7 +227,7 @@
     <form>
         <Alert color="dark" class="px-3 py-2">
             <svelte:fragment slot="icon">
-                <Textarea bind:value={textAreaMessage} id="chat" class="mx-4" rows="1" on:keypress={onKeyPress} placeholder="Your message..."/>
+                <Textarea bind:value={textAreaMessage} id="chat" rows="2" on:keypress={onKeyPress} placeholder="Your message..."/>
                 <ToolbarButton type="submit" color="blue" on:click={submitUserMessage}
                                class="rounded-full text-primary-600 dark:text-primary-500">
                     <PapperPlaneOutline class="w-5 h-5 rotate-45"/>
