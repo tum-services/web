@@ -15,37 +15,40 @@
 
     $: activeUrl = $page.url.pathname;
 
-
-    let chats = [
-        {
-            "name": "Tom",
-            "concern": "Beurlaubung",
-            "summary": "Thomas Florian möchte sich beurlauben lassen, da er eine Reise nach Italien plant.",
-            "wizard": [
-                {author: "user", content: "ich möchte mich beeurlauben lassen", complete: true},
-                {author: "bot", content: "Toll du faule Sau. Welches Semester?", complete: true},
-                {author: "user", content: "4. Semester", complete: true},
-                {author: "bot", content: "Für ein Praktikum oder Auslandssemester?", complete: true},
-                {author: "user", content: "Urlaub", complete: true},
-
-            ]
-        },
-        {"name": "Tum", "summary": "Bla Bla Bla", "wizard": ["Test TUM", "Hallo ER"]},
-        {"name": "Tim", "summary": "Bla Bla Bla", "wizard": ["Tiim", "Hallo ER"]},
-        {"name": "Dooooorian", "summary": "Bla Bla Bla", "wizard": ["Doooorian", "Hallo ER"]},
-    ]
-
+    let chats = []
 
     let current = {}
 
     const HOST = "https://api.tum.services"
 
+    function convertStupidFormatInHumanReadableFormat(stupidFormat) {
+        let messages = []
+        for (let i = 0; i < stupidFormat.length; i++) {
+            let current = stupidFormat[i]
+            messages.push({
+                author: 'bot',
+                content: current.question,
+                complete: true
+            })
+            messages.push({
+                author: 'user',
+                content: current.answer,
+                complete: true
+            })
+        }
+        return messages
+    }
+
     function crawlMessages() {
-
-
         fetch(`${HOST}/conversation/`)
                 .then((response) => response.json())
                 .then((data) => {
+                    for (let i = 0; i < data.length; i++) {
+                        if (data[i].wizard) {
+                            data[i].wizard = convertStupidFormatInHumanReadableFormat(data[i].wizard)
+                            console.log(data[i].wizard)
+                        }
+                    }
                     chats = data
                     current = data[0]
                 })
@@ -59,8 +62,7 @@
 
 <div class="overflow-scroll h-full">
     <Heading tag="h2" class="ml-4 mt-4">
-        <Mark>Admin-Dashboard</Mark>
-    </Heading>
+        Admin-Dashboard</Heading>
 
     <div class="flex m-4 b-4 gap-4">
         <Sidebar {activeUrl}>
@@ -111,9 +113,12 @@
 
                 </div>
                 <hr class="h-px my-4 bg-gray-200 border-0 dark:bg-gray-700">
+                {#if current.wizard}
+                    {#each current.wizard as message }
+                        <MessageBox message={message}/>
+                    {/each}
+                {/if}
             </div>
-
-
         </div>
     </div>
 
