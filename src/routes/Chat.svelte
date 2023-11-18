@@ -162,6 +162,8 @@
 
 					let reply = (innerLatest?.final_output?.output as string) || '';
 
+					if (chatHistory.length >= 5) chatHistory.shift();
+
 					chatHistory.push([message, reply]);
 
 					resolve({
