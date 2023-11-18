@@ -4,6 +4,8 @@
 	import '../app.postcss';
 </script>
 
-<Header />
-<slot />
-<Footer />
+<div class="h-[100vh] w-[100vw] overflow-hidden">
+	<Header />
+	<slot />
+	<Footer />
+</div>
