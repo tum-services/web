@@ -61,6 +61,7 @@
 	import { fetchEventSource } from '@microsoft/fetch-event-source';
 	import { applyPatch, type Operation } from 'fast-json-patch';
 	import { PapperPlaneOutline } from 'flowbite-svelte-icons';
+    import StartChat from "$lib/StartChat.svelte";
 
 	const lorem = new LoremIpsum({
 		sentencesPerParagraph: {
@@ -174,6 +175,11 @@
 
 <div class="flex flex-col justify-end gap-3 flex-1 max-h-full p-1">
     <div class="flex flex-col-reverse w-full gap-3 overflow-scroll">
+
+        {#if (messages.length === 0 )}
+           <StartChat bind:textAreaMessage={textAreaMessage}   />
+        {/if}
+
         {#each messages.slice().reverse() as message}
             <MessageBox {message}/>
         {/each}
