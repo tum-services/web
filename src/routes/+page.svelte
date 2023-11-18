@@ -5,7 +5,7 @@
 </script>
 
 <div class="p-8">
-	<div class="flex justify-stretch justify-items-stretch">
+	<div class="grid grid-cols-2 gap-4">
 		<Faq />
 		<Chat />
 	</div>
