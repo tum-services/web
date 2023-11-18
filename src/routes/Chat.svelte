@@ -73,7 +73,15 @@
 		}
 	});
 
-	let messages: Message[] = [];
+	let messages: Message[] = [
+		{
+			author: 'bot',
+			content: Promise.resolve({
+				content:
+					"Hi, I'm TUM Bot! How can I help you?\nHere are some options:\n1. One\n2. Two\n3. Three\n\nAnd some more options:\n- one\n- Two\n- Three"
+			})
+		}
+	];
 
 	const onKeyPress = (event: KeyboardEvent) => {
 		const target = event.target as HTMLTextAreaElement;
@@ -116,7 +124,7 @@
 		let partialMessageChannel = new PartialMessageListener();
 		const content = new Promise<MessageContent>(async (resolve, reject) => {
 			let innerLatest: RunState | null = null;
-			await fetchEventSource('http://localhost:8080/rag-conversation/stream_log', {
+			await fetchEventSource('https://api.tum.services/rag-conversation/stream_log', {
 				//signal: controller.signal,
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
@@ -148,7 +156,13 @@
 							?.final_output?.documents;
 
 						for (const document of documents || []) {
-							metadata.sources.push(document.metadata);
+							// check if link already exists
+							const existing = metadata.sources.find(
+								(source) => source.source === document.metadata.source
+							);
+							if (!existing) {
+								metadata.sources.push(document.metadata);
+							}
 						}
 					}
 
@@ -173,20 +187,28 @@
 </script>
 
 <div class="flex flex-col justify-end gap-3 flex-1 max-h-full p-1">
-    <div class="flex flex-col-reverse w-full gap-3 overflow-scroll">
-        {#each messages.slice().reverse() as message}
-            <MessageBox {message}/>
-        {/each}
-    </div>
-    <form>
-        <div class="flex gap-2">
-            <Textarea bind:value={textAreaMessage} id="chat" rows="2" on:keypress={onKeyPress} placeholder="Your message..."/>
-            <ToolbarButton type="submit" color="blue" on:click={submitUserMessage}
-                           class="rounded-full text-primary-600 dark:text-primary-500"
-                ><PapperPlaneOutline class="w-5 h-5 rotate-45"/>
-                <span class="sr-only">Type your question about TUM here</span>
-            </ToolbarButton>
-        </div>
-
-    </form>
+	<div class="flex flex-col-reverse w-full gap-3 overflow-scroll">
+		{#each messages.slice().reverse() as message}
+			<MessageBox {message} />
+		{/each}
+	</div>
+	<form>
+		<div class="flex gap-2">
+			<Textarea
+				bind:value={textAreaMessage}
+				id="chat"
+				rows="2"
+				on:keypress={onKeyPress}
+				placeholder="Your message..."
+			/>
+			<ToolbarButton
+				type="submit"
+				color="blue"
+				on:click={submitUserMessage}
+				class="rounded-full text-primary-600 dark:text-primary-500"
+				><PapperPlaneOutline class="w-5 h-5 rotate-45" />
+				<span class="sr-only">Type your question about TUM here</span>
+			</ToolbarButton>
+		</div>
+	</form>
 </div>
