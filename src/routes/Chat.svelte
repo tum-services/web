@@ -209,32 +209,20 @@
 </script>
 
 <div class="flex flex-col justify-end gap-3 flex-1 max-h-full p-1">
-	<div class="flex flex-col-reverse w-full gap-3 overflow-scroll">
-		{#each messages.slice().reverse() as message}
-			<MessageBox {message} />
-		{/each}
-	</div>
+    <div class="flex flex-col-reverse w-full gap-3 overflow-scroll">
+        {#each messages.slice().reverse() as message}
+            <MessageBox {message}/>
+        {/each}
+    </div>
+    <form>
+        <div class="flex gap-2">
+            <Textarea bind:value={textAreaMessage} id="chat" rows="2" on:keypress={onKeyPress} placeholder="Your message..."/>
+            <ToolbarButton type="submit" color="blue" on:click={submitUserMessage}
+                           class="rounded-full text-primary-600 dark:text-primary-500"
+                ><PapperPlaneOutline class="w-5 h-5 rotate-45"/>
+                <span class="sr-only">Type your question about TUM here</span>
+            </ToolbarButton>
+        </div>
 
-	<form>
-		<Alert color="dark" class="px-3 py-2">
-			<svelte:fragment slot="icon">
-				<Textarea
-					bind:value={textAreaMessage}
-					id="chat"
-					rows="2"
-					on:keypress={onKeyPress}
-					placeholder="Your message..."
-				/>
-				<ToolbarButton
-					type="submit"
-					color="blue"
-					on:click={submitUserMessage}
-					class="rounded-full text-primary-600 dark:text-primary-500"
-				>
-					<PapperPlaneOutline class="w-5 h-5 rotate-45" />
-					<span class="sr-only">Type your question about TUM here</span>
-				</ToolbarButton>
-			</svelte:fragment>
-		</Alert>
-	</form>
+    </form>
 </div>
