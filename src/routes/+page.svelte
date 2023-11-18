@@ -4,6 +4,6 @@
 	import Chat from './Chat.svelte';
 </script>
 
-<div class="container m-auto h-full">
+<div class="container h-full mx-auto flex flex-col justify-stretch">
 	<Chat />
 </div>

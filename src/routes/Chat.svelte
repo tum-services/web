@@ -201,7 +201,7 @@
 	const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
 </script>
 
-<div class="flex flex-col gap-3">
+<div class="flex flex-col justify-end gap-3 h-full">
 	<div class="flex flex-col-reverse w-full gap-3 overflow-scroll">
 		{#each messages.slice().reverse() as message}
 			<MessageBox {message} />
