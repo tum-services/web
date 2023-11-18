@@ -61,6 +61,7 @@
 	import { fetchEventSource } from '@microsoft/fetch-event-source';
 	import { applyPatch, type Operation } from 'fast-json-patch';
 	import { PapperPlaneOutline } from 'flowbite-svelte-icons';
+	import StartChat from '$lib/StartChat.svelte';
 
 	const lorem = new LoremIpsum({
 		sentencesPerParagraph: {
@@ -73,15 +74,8 @@
 		}
 	});
 
-	let messages: Message[] = [
-		{
-			author: 'bot',
-			content: Promise.resolve({
-				content:
-					"Hi, I'm TUM Bot! How can I help you?\nHere are some options:\n1. One\n2. Two\n3. Three\n\nAnd some more options:\n- one\n- Two\n- Three"
-			})
-		}
-	];
+	let messages: Message[] = [];
+	let chatHistory: string[][] = [];
 
 	const onKeyPress = (event: KeyboardEvent) => {
 		const target = event.target as HTMLTextAreaElement;
@@ -124,16 +118,6 @@
 		let partialMessageChannel = new PartialMessageListener();
 		const content = new Promise<MessageContent>(async (resolve, reject) => {
 			let innerLatest: RunState | null = null;
-			// always take two messages and pass them as a tuple
-			const chatHistory = [];
-			for (let i = 0; messages.length - i >= 2; i += 2) {
-				const message = await messages[i].content;
-				const nextMessage = await messages[i + 1].content;
-				chatHistory.push([message.content, nextMessage?.content]);
-			}
-
-			console.log(chatHistory);
-
 			await fetchEventSource('http://localhost:8080/rag-conversation/stream_log', {
 				//signal: controller.signal,
 				method: 'POST',
@@ -176,8 +160,12 @@
 						}
 					}
 
+					let reply = (innerLatest?.final_output?.output as string) || '';
+
+					chatHistory.push([message, reply]);
+
 					resolve({
-						content: (innerLatest?.final_output?.output as string) || '',
+						content: reply,
 						botMetadata: metadata
 					});
 				},
@@ -194,10 +182,17 @@
 			content
 		});
 	};
+
+	let busy = false;
+	$: busy = messages.length > 0 && messages[messages.length - 1].author === 'user';
 </script>
 
 <div class="flex flex-col justify-end gap-3 flex-1 max-h-full p-1">
 	<div class="flex flex-col-reverse w-full gap-3 overflow-scroll">
+		{#if messages.length === 0}
+			<StartChat bind:textAreaMessage />
+		{/if}
+
 		{#each messages.slice().reverse() as message}
 			<MessageBox {message} />
 		{/each}
@@ -210,13 +205,16 @@
 				rows="2"
 				on:keypress={onKeyPress}
 				placeholder="Your message..."
+				disabled={busy}
 			/>
 			<ToolbarButton
 				type="submit"
 				color="blue"
 				on:click={submitUserMessage}
 				class="rounded-full text-primary-600 dark:text-primary-500"
-				><PapperPlaneOutline class="w-5 h-5 rotate-45" />
+				disabled={busy}
+			>
+				<PapperPlaneOutline class="w-5 h-5 rotate-45" />
 				<span class="sr-only">Type your question about TUM here</span>
 			</ToolbarButton>
 		</div>

@@ -16,6 +16,7 @@
 	export interface Message {
 		author: 'bot' | 'user';
 		content: Promise<MessageContent>;
+		fullMessageText?: string;
 		partialMessageChannel?: PartialMessageListener;
 	}
 
@@ -35,11 +36,8 @@
 </script>
 
 <script lang="ts">
-	import { Card, Heading, P, Span, Spinner } from 'flowbite-svelte';
+	import { Card, P } from 'flowbite-svelte';
 	import { ArrowUpRightFromSquareOutline, HeadphonesSolid, UserSolid } from 'flowbite-svelte-icons';
-	import { onMount } from 'svelte';
-	import Header from './Header.svelte';
-	import SvelteMarkdown from 'svelte-markdown';
 	import MessageBoxContent from './MessageBoxContent.svelte';
 
 	export let message: Message;
