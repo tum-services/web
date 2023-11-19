@@ -60,6 +60,15 @@
 		validation: string;
 		options?: string[];
 	}
+
+	export interface ConversationCreationRequest {
+		conversation: {
+			content: string;
+			author: string;
+		}[];
+		wizard_id: number;
+		wizard_answers: string[];
+	}
 </script>
 
 <script lang="ts">
@@ -171,6 +180,11 @@
 			complete: false
 		});
 
+		if (activeWizzard !== undefined) {
+			handleWizzardResponse(message);
+			return;
+		}
+
 		let innerLatest: RunState | null = null;
 
 		const chatHistory: [string, string][] = [];
@@ -229,6 +243,7 @@
 	};
 
 	const onWizzardStart = async (wizzard: number) => {
+		busy = true;
 		console.log("Wizzard '" + wizzard + ' (' + wizzardName[wizzard] + ")' started!");
 
 		pushMessage({
@@ -252,9 +267,11 @@
 			questions: wizzardQuestions,
 			currentQuestion: 0
 		};
+
+		nextWizzardQuestion();
 	};
 
-	const nextWizzardQuestion = () => {
+	const nextWizzardQuestion = (showErrorMessage?: string) => {
 		if (!activeWizzard) return;
 
 		let question = activeWizzard.questions[activeWizzard.currentQuestion];
@@ -267,19 +284,69 @@
 			}
 		}
 
+		if (showErrorMessage) {
+			questionString = 'Error: ' + showErrorMessage + '\n\nPlease try again: \n\n' + questionString;
+		}
+
 		updateLastMessage({
 			...messages[messages.length - 1],
 			content: questionString,
 			complete: true
 		});
+
+		busy = false;
 	};
 
-	const handleWizzardResponse = (response: string) => {
-		pushMessage({
-			author: 'bot',
-			content: '',
-			complete: false
+	const handleWizzardResponse = async (response: string) => {
+		if (!activeWizzard) return;
+
+		let answerOkResponse = await fetch(
+			`${BASE_URL}/wizard/${activeWizzard.id}/${
+				activeWizzard.questions[activeWizzard.currentQuestion].id
+			}?answer=${encodeURIComponent(response)}`,
+			{
+				method: 'POST'
+			}
+		);
+
+		if (answerOkResponse.status !== 200) {
+			nextWizzardQuestion(((await answerOkResponse.json()) as { detail: string }).detail);
+			return;
+		}
+
+		activeWizzard.answers.push(response);
+		activeWizzard.currentQuestion++;
+
+		if (activeWizzard.currentQuestion < activeWizzard.questions.length) {
+			nextWizzardQuestion();
+			return;
+		}
+
+		try {
+			let conversationCreationResponse = await fetch(`${BASE_URL}/conversation/`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					conversation: messages.map((message) => ({
+						content: message.content,
+						author: message.author
+					})),
+					wizard_id: activeWizzard.id,
+					wizard_answers: activeWizzard.answers
+				})
+			});
+		} catch (e) {
+			console.error(e);
+		}
+
+		updateLastMessage({
+			...messages[messages.length - 1],
+			content:
+				"That's it! The conversation will be forwarded to a TUM employee who will contact you soon.",
+			complete: true
 		});
+
+		activeWizzard = undefined;
 	};
 </script>
 
