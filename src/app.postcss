@@ -32,15 +32,15 @@
     @apply bg-black dark:bg-white;
 }
 
-.message-box-contents.typing > ul:last-child >  *:last-child::after {
+.message-box-contents.typing > ul:last-child,ol:last-child >  *:last-child::after {
     content: '';
     display: inline-block;
     height: 1em;
     width: 0.3em;
     margin-left: 0.3em;
-    background-color: white;
     animation: blink-animation 0.5s steps(5, start) infinite;
     -webkit-animation: blink-animation 0.5s steps(5, start) infinite;
+    @apply bg-black dark:bg-white;
 }
 
 @keyframes blink-animation {
