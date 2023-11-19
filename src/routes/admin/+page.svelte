@@ -25,6 +25,7 @@
 	let current: number = 0;
 
 	const HOST = 'https://api.tum.services';
+	//const HOST = 'http://localhost:8080';
 
 	function convertStupidFormatInHumanReadableFormat(
 		stupidFormat: { question: string; answer: string }[]

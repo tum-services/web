@@ -73,6 +73,7 @@
 
 <script lang="ts">
 	const BASE_URL = 'https://api.tum.services';
+	//const BASE_URL = 'http://localhost:8080';
 
 	import { Textarea, ToolbarButton } from 'flowbite-svelte';
 	import type { BotMetadata, Message } from '$lib/MessageBox.svelte';
@@ -174,6 +175,15 @@
 			complete: true
 		});
 
+		if (message.toLowerCase().match(/(.*uni.*best.*)|(.*best.*uni.*)/)) {
+			pushMessage({
+				author: 'bot',
+				content: 'Obviously TUM is the best university in the world!',
+				complete: true
+			});
+			return;
+		}
+
 		pushMessage({
 			author: 'bot',
 			content: '',
@@ -201,7 +211,7 @@
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
 				input: {
-					chat_history: chatHistory,
+					chat_history: [],
 					question: message
 				}
 			}),
