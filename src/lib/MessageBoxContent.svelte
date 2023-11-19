@@ -10,7 +10,7 @@
 	{#if text.length === 0}
 		<p></p>
 	{:else}
-		<SvelteMarkdown source={text} />
+		<SvelteMarkdown options={{ mangle: false }} source={text} />
 	{/if}
 </div>
 
