@@ -1,20 +1,20 @@
-<script>
+<script lang="ts">
 	import { Alert, Card, Heading, P } from 'flowbite-svelte';
 
-	export let textAreaMessage = '';
+	export let onSubmit: (message: string) => void;
 
 	let exampleQuestions = [
-		{
-			question: 'Wie viele ECTS braucht man insgesamt für den Informatikbachelor?',
-			highlightWords: 5
-		},
 		{
 			question: 'Wie bewerbe ich mich für einen Informatikbachelor an der TUM Schritt für Schritt?',
 			highlightWords: 4
 		},
 		{
-			question: 'Welche Nebenfächer gibt es für den Informatikbachelor?',
-			highlightWords: 4
+			question: 'Ich möchte eine Beurlaubung beantragen. Wie geht das?',
+			highlightWords: 5
+		},
+		{
+			question: 'Was gibt es morgen in der Mensa zu essen?',
+			highlightWords: 7
 		},
 		{
 			question: 'Wo ist das Büro der Studienberatung Informatik?',
@@ -28,7 +28,7 @@
 		<Card
 			class="cursor-pointer max-w-none"
 			on:click={() => {
-				textAreaMessage = question.question;
+				onSubmit(question.question);
 			}}
 		>
 			<Heading tag="h5" class="mb-2 text-xl font-bold tracking-tight text-gray-900 dark:text-white">

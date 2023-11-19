@@ -10,7 +10,7 @@ interface NavigatumSearchResult {
 
 
 const findRoomId = async (message: string) => {
-    let roomNumberMatch = message.match(/\d+\.\d+\.\d+/);
+    let roomNumberMatch = message.match(/(\d\d\.\d\d\.\d\d\d([^\d]|$))/);
     console.log(roomNumberMatch);
     if (!roomNumberMatch) {
         return;

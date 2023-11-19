@@ -353,7 +353,7 @@
 <div class="flex flex-col justify-end gap-3 flex-1 max-h-full p-1">
 	<div class="flex flex-col-reverse w-full gap-3 overflow-scroll">
 		{#if messages.length === 0}
-			<StartChat bind:textAreaMessage />
+			<StartChat onSubmit={checkSendMessage} />
 		{/if}
 
 		{#each messages.slice().reverse() as message}

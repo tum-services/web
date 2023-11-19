@@ -25,7 +25,7 @@
 	import { wizzardName } from './wizzard';
 
 	export let message: Message;
-	export let onWizzardStart: (wizzard: number) => void;
+	export let onWizzardStart: (wizzard: number) => void = () => {};
 </script>
 
 <Card class="w-full max-w-[100%]">
