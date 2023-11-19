@@ -9,16 +9,16 @@
 			highlightWords: 4
 		},
 		{
-			question: 'Ich möchte eine Beurlaubung beantragen. Wie geht das?',
-			highlightWords: 5
-		},
-		{
 			question: 'Was gibt es morgen in der Mensa zu essen?',
 			highlightWords: 7
 		},
 		{
 			question: 'Wo ist das Büro der Studienberatung Informatik?',
 			highlightWords: 6
+		},
+		{
+			question: 'Ich möchte eine Beurlaubung beantragen. Wie geht das?',
+			highlightWords: 5
 		}
 	];
 </script>
